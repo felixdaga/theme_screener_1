@@ -1,76 +1,72 @@
-# Theme Investment Screener
+# Company Theme Screener
 
-An interactive tool for screening companies based on their relevance to investment themes, with customizable scoring weights and automated analysis capabilities.
+An interactive Jupyter notebook tool for screening and shortlisting companies based on multiple criteria. This tool allows you to:
+
+1. Upload company data from Excel files
+2. Select and weight different criteria for company evaluation
+3. Calculate composite scores based on weighted criteria
+4. Filter companies based on score percentiles
+5. Visualize results with interactive plots
 
 ## Features
 
-- Upload and analyze Excel files containing company data
-- Customize scoring weights for different metrics
-- View top companies based on weighted scores
-- Interactive visualizations of portfolio characteristics:
-  - Sector distribution
-  - Country distribution
-  - Score distribution
-- Conference call analysis using custom AI function
-- Export results to Excel
+- Interactive file upload widget for Excel data
+- Dynamic criteria selection and weighting
+- Score normalization and composite score calculation
+- Percentile-based filtering
+- Interactive visualizations using Plotly
+- User-friendly interface with IPywidgets
 
-## Setup
+## Requirements
+
+- Python 3.x
+- Jupyter Notebook
+- Required Python packages:
+  - pandas
+  - numpy
+  - plotly
+  - ipywidgets
+  - openpyxl (for Excel file support)
+
+## Installation
 
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/theme_screener.git
-   cd theme_screener
+   git clone https://github.com/felixdaga/theme_screener_1.git
+   cd theme_screener_1
    ```
 
-2. Install the required dependencies:
+2. Install required packages:
 
    ```bash
-   pip install -r requirements.txt
+   pip install pandas numpy plotly ipywidgets openpyxl
    ```
 
-3. Ensure your custom AI function is properly imported and configured
-
-## Usage
-
-### Running in Jupyter Notebook
-
-1. Start Jupyter Notebook:
+3. Launch Jupyter Notebook:
 
    ```bash
    jupyter notebook
    ```
 
-2. Open `theme_screener.ipynb`
+4. Open `theme_screener_steps.ipynb`
 
-3. Run the cells in order:
+## Usage
 
-   - First cell: Imports required libraries
-   - Second cell: Launches the Streamlit application
+1. Upload your Excel file containing company data using the file upload widget
+2. Select the criteria you want to use for evaluation
+3. Adjust the weights for each criterion using the sliders
+4. Click "Calculate Scores" to generate composite scores
+5. Use the percentile slider to filter companies based on their scores
 
-4. The application will open in your default web browser at http://localhost:8501
+## Input Data Format
 
-### Running as Standalone Script
+Your Excel file should contain:
 
-1. Run the Streamlit application:
-   ```bash
-   streamlit run theme_screener.py
-   ```
+- One row per company
+- Columns for different criteria/metrics
+- Numerical values for each criterion
 
-## Excel File Format
+## License
 
-Your Excel file should contain the following columns:
-
-- Company (company name)
-- Country
-- Sector
-- Score columns (numeric values, preferably 0 or 1)
-- Revenue alignment columns (numeric values)
-- Conference_Call (text)
-
-## Notes
-
-- The tool automatically detects numeric columns containing "score" or "revenue" in their names for weighting
-- Conference call analysis uses the custom AI function `AI.get_surface_chat_completion()`
-- Results are sorted by weighted score in descending order
-- Default score columns are those ending with "\_final"
+This project is open source and available under the MIT License.
