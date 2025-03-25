@@ -304,13 +304,24 @@ if uploaded_file is not None:
             portfolio_cum_returns = (1 + portfolio_avg_returns).cumprod()
             msci_cum_returns = (1 + msci_avg_returns).cumprod()
             
+            # Add one day prior to start date with value 1
+            prior_date = start_date_dt - pd.Timedelta(days=1)
+            portfolio_cum_returns = pd.concat([
+                pd.Series(1.0, index=[prior_date]),
+                portfolio_cum_returns
+            ])
+            msci_cum_returns = pd.concat([
+                pd.Series(1.0, index=[prior_date]),
+                msci_cum_returns
+            ])
+            
             # Create the plot
             fig = px.line(
                 pd.DataFrame({
                     'Portfolio': portfolio_cum_returns,
                     'MSCI World': msci_cum_returns
                 }),
-                title='Cumulative Returns Comparison',
+                title='Cumulative Returns Comparison (Starting at 1)',
                 labels={'value': 'Cumulative Return', 'index': 'Date'}
             )
             
