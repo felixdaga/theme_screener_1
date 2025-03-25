@@ -3,15 +3,21 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
-# Load returns data
-try:
-    RETURNS = pd.read_excel('returns.xlsx', index_col='DATE')
-    MSCIWRLD = pd.read_excel('msci_wrld.xlsx')
+@st.cache_data
+def load_returns_data():
+    """Load and cache returns data"""
+    try:
+        returns = pd.read_excel('returns.xlsx', index_col='DATE')
+        msci = pd.read_excel('msci_wrld.xlsx')
+        return returns, msci
+    except Exception as e:
+        st.error(f"Error loading returns data: {str(e)}")
+        return None, None
+
+# Load returns data using cache
+RETURNS, MSCIWRLD = load_returns_data()
+if RETURNS is not None and MSCIWRLD is not None:
     st.success("Returns data loaded successfully!")
-except Exception as e:
-    st.error(f"Error loading returns data: {str(e)}")
-    RETURNS = None
-    MSCIWRLD = None
 
 # Set page config
 st.set_page_config(
