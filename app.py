@@ -374,6 +374,58 @@ if uploaded_file is not None:
                     f"From {start_date.strftime('%Y-%m-%d')} to {msci_cum_returns.index[-1].strftime('%Y-%m-%d')}"
                 )
 
+        # ChatGPT Portfolio Analysis
+        st.header("Ask ChatGPT about the Portfolio")
+        
+        # Column selection for analysis
+        available_columns = df_filtered.columns.tolist()
+        selected_columns = st.multiselect(
+            "Select columns to include in the analysis",
+            options=available_columns,
+            default=['short_name', 'Composite_Score', 'gics_1_sector', 'country', 'Market cap group'],
+            help="Choose which columns to include in the ChatGPT analysis"
+        )
+        
+        # Chunk size selection
+        chunk_size = st.number_input(
+            "Select chunk size for data processing",
+            min_value=1,
+            max_value=100,
+            value=10,
+            help="Number of companies to process in each chunk"
+        )
+        
+        # Question input
+        question = st.text_area(
+            "Enter your question about the portfolio",
+            placeholder="e.g., What are the key sector trends in this portfolio?",
+            help="Ask any question about the portfolio composition, characteristics, or patterns"
+        )
+        
+        if st.button("Analyze with ChatGPT"):
+            if not selected_columns:
+                st.error("Please select at least one column for analysis")
+            elif not question:
+                st.error("Please enter a question")
+            else:
+                with st.spinner("Analyzing portfolio with ChatGPT..."):
+                    try:
+                        # Format data for prompt
+                        formatted_data = format_data_for_prompt(
+                            df_filtered[selected_columns],
+                            chunk_size=chunk_size
+                        )
+                        
+                        # Get analysis from ChatGPT
+                        analysis = analyze_with_chatgpt(formatted_data, question)
+                        
+                        # Display results
+                        st.markdown("### Analysis Results")
+                        st.markdown(analysis)
+                        
+                    except Exception as e:
+                        st.error(f"Error during analysis: {str(e)}")
+
 else:
     st.info("Please upload an Excel file to begin analysis")
     

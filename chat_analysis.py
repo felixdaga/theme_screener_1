@@ -2,18 +2,18 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Any
 
-def chunk_dataframe(df: pd.DataFrame, max_rows: int = 10) -> List[pd.DataFrame]:
+def chunk_dataframe(df: pd.DataFrame, chunk_size: int = 10) -> List[pd.DataFrame]:
     """
     Split dataframe into smaller chunks to respect token limits.
     
     Args:
         df: Input dataframe
-        max_rows: Maximum number of rows per chunk
+        chunk_size: Number of rows per chunk
         
     Returns:
         List of dataframe chunks
     """
-    return [df[i:i + max_rows] for i in range(0, len(df), max_rows)]
+    return [df[i:i + chunk_size] for i in range(0, len(df), chunk_size)]
 
 def format_data_for_prompt(df_chunk: pd.DataFrame) -> str:
     """
@@ -25,35 +25,34 @@ def format_data_for_prompt(df_chunk: pd.DataFrame) -> str:
     Returns:
         Formatted string containing relevant information
     """
-    formatted_text = "Here are the companies and their rationales:\n\n"
+    formatted_text = "Here are the companies and their details:\n\n"
     
     for _, row in df_chunk.iterrows():
         formatted_text += f"Company: {row['short_name']}\n"
-        formatted_text += f"Sector: {row['gics_1_sector']}\n"
-        formatted_text += f"Rationale: {row['Conf_rationale']}\n"
-        formatted_text += f"Revenue Description: {row['Most_aligned_rev_desc']}\n"
-        formatted_text += f"Composite Score: {row['Composite_Score']}\n"
+        for col in df_chunk.columns:
+            if col != 'short_name':  # Skip short_name as it's already included
+                formatted_text += f"{col}: {row[col]}\n"
         formatted_text += "-" * 50 + "\n"
     
     return formatted_text
 
-def analyze_with_chatgpt(df: pd.DataFrame, question: str, max_rows: int = 10) -> str:
+def analyze_with_chatgpt(df: pd.DataFrame, question: str, chunk_size: int = 10) -> str:
     """
     Analyze dataframe data using ChatGPT while managing token limits.
     
     Args:
         df: Input dataframe
         question: User's question about the data
-        max_rows: Maximum number of rows to process at once
+        chunk_size: Number of rows to process at once
         
     Returns:
         ChatGPT's response
     """
     # Split dataframe into chunks
-    chunks = chunk_dataframe(df, max_rows)
+    chunks = chunk_dataframe(df, chunk_size)
     
     # Initialize system prompt
-    system_prompt = """You are a professional financial analyst. Analyze the provided company data and answer questions about their rationales, sector composition, and overall trends. Be concise but thorough in your analysis."""
+    system_prompt = """You are a professional financial analyst. Analyze the provided company data and answer questions about their characteristics, composition, and overall trends. Be concise but thorough in your analysis. Focus on providing actionable insights and clear patterns in the data."""
     
     # Process each chunk and combine responses
     all_responses = []
@@ -84,28 +83,30 @@ def analyze_with_chatgpt(df: pd.DataFrame, question: str, max_rows: int = 10) ->
     
     return final_response
 
-def get_sector_summary(df: pd.DataFrame) -> str:
+def get_sector_summary(df: pd.DataFrame, chunk_size: int = 10) -> str:
     """
     Get a summary of sector composition and trends.
     
     Args:
         df: Input dataframe
+        chunk_size: Number of rows to process at once
         
     Returns:
         ChatGPT's analysis of sector composition
     """
     question = "Analyze the sector composition of these companies and identify any notable trends or patterns."
-    return analyze_with_chatgpt(df, question)
+    return analyze_with_chatgpt(df, question, chunk_size)
 
-def get_rationale_analysis(df: pd.DataFrame) -> str:
+def get_rationale_analysis(df: pd.DataFrame, chunk_size: int = 10) -> str:
     """
     Analyze the rationales provided for the companies.
     
     Args:
         df: Input dataframe
+        chunk_size: Number of rows to process at once
         
     Returns:
         ChatGPT's analysis of company rationales
     """
     question = "Analyze the rationales provided for these companies. What are the common themes and unique aspects?"
-    return analyze_with_chatgpt(df, question) 
+    return analyze_with_chatgpt(df, question, chunk_size) 
