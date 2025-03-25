@@ -3,6 +3,16 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
+# Load returns data
+try:
+    RETURNS = pd.read_excel('returns.xlsx', index_col='DATE')
+    MSCIWRLD = pd.read_excel('msci_wrld.xlsx')
+    st.success("Returns data loaded successfully!")
+except Exception as e:
+    st.error(f"Error loading returns data: {str(e)}")
+    RETURNS = None
+    MSCIWRLD = None
+
 # Set page config
 st.set_page_config(
     page_title="Company Score Analysis",
@@ -258,6 +268,72 @@ if uploaded_file is not None:
             help="Download the filtered company data as a CSV file"
         )
 
+        # Add returns analysis section
+        st.markdown("---")
+        st.subheader("Portfolio Returns Analysis")
+        
+        # Add returns analysis button
+        if st.button("Run equal-weighted returns for shortlisted portfolio"):
+            try:
+                # Get start date from user
+                start_date = st.date_input(
+                    "Select start date",
+                    value=pd.to_datetime("2018-01-01"),
+                    min_value=pd.to_datetime("2000-01-01"),
+                    max_value=pd.to_datetime("2024-12-31")
+                )
+                
+                # Filter RETURNS for shortlisted portfolio
+                basket_returns = RETURNS[df_filtered['ID'].tolist()]
+                basket_returns = basket_returns[basket_returns.index >= start_date]
+                
+                # Filter RETURNS for MSCI World
+                wrld_returns = RETURNS[MSCIWRLD['ID'].tolist()]
+                wrld_returns = wrld_returns[wrld_returns.index >= start_date]
+                
+                # Calculate average returns
+                basket_avg_returns = basket_returns.mean(axis=1)
+                wrld_avg_returns = wrld_returns.mean(axis=1)
+                
+                # Calculate cumulative returns (starting from 0)
+                basket_cum_returns = (1 + basket_avg_returns).cumprod()
+                wrld_cum_returns = (1 + wrld_avg_returns).cumprod()
+                
+                # Create the plot
+                fig_returns = px.line(
+                    pd.DataFrame({
+                        'Portfolio': basket_cum_returns,
+                        'MSCI World': wrld_cum_returns
+                    }),
+                    title='Cumulative Returns Comparison',
+                    labels={'value': 'Cumulative Return', 'index': 'Date'}
+                )
+                
+                fig_returns.update_layout(
+                    plot_bgcolor='white',
+                    title_x=0.5,
+                    legend_title='Index'
+                )
+                
+                # Display the plot
+                st.plotly_chart(fig_returns, use_container_width=True)
+                
+                # Display some statistics
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric(
+                        "Portfolio Total Return",
+                        f"{(basket_cum_returns.iloc[-1] - 1) * 100:.2f}%"
+                    )
+                with col2:
+                    st.metric(
+                        "MSCI World Total Return",
+                        f"{(wrld_cum_returns.iloc[-1] - 1) * 100:.2f}%"
+                    )
+                
+            except Exception as e:
+                st.error(f"Error calculating returns: {str(e)}")
+
 else:
     st.info("Please upload an Excel file to begin analysis")
     
@@ -267,7 +343,7 @@ else:
     st.markdown("""
     Your Excel file should contain the following columns:
     - `short_name`: Company identifiers
-    - `score_1`, `score_2`, etc.: Scoring criteria columns
+    - Any numeric columns you want to use for scoring
     - `gics_1_sector`: Industry sector classification
     - `country`: Company's country (optional)
     - `Market cap group`: Market capitalization category (optional)
