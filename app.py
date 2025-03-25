@@ -56,16 +56,17 @@ if uploaded_file is not None:
     with col1:
         st.subheader("Score Analysis")
         
-        # Criteria selection
-        criteria_cols = [col for col in df.columns if col.startswith('score_')]
-        if not criteria_cols:
-            st.error("No scoring criteria found in the file!")
+        # Criteria selection - modified to allow any numeric columns
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        if not numeric_cols:
+            st.error("No numeric columns found in the file!")
             st.stop()
             
         selected_criteria = st.multiselect(
             'Select Scoring Criteria',
-            options=criteria_cols,
-            default=criteria_cols
+            options=numeric_cols,
+            default=numeric_cols[:3] if len(numeric_cols) >= 3 else numeric_cols,
+            help="Choose the numeric columns to use for composite scoring"
         )
         
         # Weights for selected criteria
@@ -81,7 +82,8 @@ if uploaded_file is not None:
                         max_value=5.0,
                         value=1.0,
                         step=0.1,
-                        key=f"weight_{criterion}"
+                        key=f"weight_{criterion}",
+                        help=f"Adjust the weight for {criterion} in the composite score"
                     )
     
     with col2:

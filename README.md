@@ -5,7 +5,7 @@ A Streamlit-based dashboard for analyzing company scores and portfolio compositi
 ## Features
 
 - Upload Excel files containing company data
-- Select and weight scoring criteria
+- Select and weight any numeric columns for composite scoring
 - Filter companies based on percentile thresholds
 - Visualize score distributions
 - Analyze portfolio composition by:
@@ -41,7 +41,7 @@ A Streamlit-based dashboard for analyzing company scores and portfolio compositi
 
 3. Upload an Excel file with the following columns:
    - `short_name`: Company identifiers
-   - `score_1`, `score_2`, etc.: Scoring criteria columns
+   - Any numeric columns you want to use for scoring
    - `gics_1_sector`: Industry sector classification
    - `country`: Company's country (optional)
    - `Market cap group`: Market capitalization category (optional)
@@ -50,11 +50,11 @@ A Streamlit-based dashboard for analyzing company scores and portfolio compositi
 
 Your Excel file should look something like this:
 
-| short_name | score_1 | score_2 | score_3 | gics_1_sector | country | Market cap group |
-| ---------- | ------- | ------- | ------- | ------------- | ------- | ---------------- |
-| Company A  | 1       | 0       | 1       | IT            | USA     | Large Cap        |
-| Company B  | 0       | 1       | 0       | Energy        | UK      | Mid Cap          |
-| Company C  | 1       | 1       | 0       | IT            | USA     | Small Cap        |
+| short_name | metric_1 | metric_2 | metric_3 | gics_1_sector | country | Market cap group |
+| ---------- | -------- | -------- | -------- | ------------- | ------- | ---------------- |
+| Company A  | 1.5      | 0.8      | 1.2      | IT            | USA     | Large Cap        |
+| Company B  | 0.7      | 1.3      | 0.9      | Energy        | UK      | Mid Cap          |
+| Company C  | 1.1      | 1.0      | 0.7      | IT            | USA     | Small Cap        |
 
 ## License
 
