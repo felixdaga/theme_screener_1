@@ -219,6 +219,27 @@ if uploaded_file is not None:
             else:
                 st.warning("Market cap group data not available in the uploaded file")
         
+
+        
+        # Add charts for Most_aligned_rev_name and Least_aligned_rev_name if available
+        alignment_cols = ['Most_aligned_rev_name', 'Least_aligned_rev_name']
+        for col in alignment_cols:
+            if col in df_filtered.columns:
+                value_counts = df_filtered[col].value_counts().head(10)
+                fig = px.bar(
+                    x=value_counts.index,
+                    y=value_counts.values,
+                    title=f'Top 10 by {col}',
+                    labels={'x': col, 'y': 'Count'},
+                    color=value_counts.values,
+                    color_continuous_scale='Viridis'
+                )
+                fig.update_layout(
+                    xaxis_tickangle=-45,
+                    showlegend=False
+                )
+                st.plotly_chart(fig, use_container_width=True)
+        
         # Add summary metrics
         st.markdown("---")
         st.subheader("Composition Summary")
