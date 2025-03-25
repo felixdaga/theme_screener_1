@@ -1,72 +1,61 @@
-# Company Theme Screener
+# Company Score Analysis Dashboard
 
-An interactive Jupyter notebook tool for screening and shortlisting companies based on multiple criteria. This tool allows you to:
-
-1. Upload company data from Excel files
-2. Select and weight different criteria for company evaluation
-3. Calculate composite scores based on weighted criteria
-4. Filter companies based on score percentiles
-5. Visualize results with interactive plots
+A Streamlit-based dashboard for analyzing company scores and portfolio composition.
 
 ## Features
 
-- Interactive file upload widget for Excel data
-- Dynamic criteria selection and weighting
-- Score normalization and composite score calculation
-- Percentile-based filtering
-- Interactive visualizations using Plotly
-- User-friendly interface with IPywidgets
-
-## Requirements
-
-- Python 3.x
-- Jupyter Notebook
-- Required Python packages:
-  - pandas
-  - numpy
-  - plotly
-  - ipywidgets
-  - openpyxl (for Excel file support)
+- Upload Excel files containing company data
+- Select and weight scoring criteria
+- Filter companies based on percentile thresholds
+- Visualize score distributions
+- Analyze portfolio composition by:
+  - Sector
+  - Country
+  - Market Cap Group
+- Download filtered results as CSV
 
 ## Installation
 
-1. Clone this repository:
+1. Clone the repository:
 
    ```bash
-   git clone https://github.com/felixdaga/theme_screener_1.git
-   cd theme_screener_1
+   git clone <repository-url>
+   cd <repository-name>
    ```
 
-2. Install required packages:
+2. Install the required packages:
 
    ```bash
-   pip install pandas numpy plotly ipywidgets openpyxl
+   pip install -r requirements.txt
    ```
-
-3. Launch Jupyter Notebook:
-
-   ```bash
-   jupyter notebook
-   ```
-
-4. Open `theme_screener_steps.ipynb`
 
 ## Usage
 
-1. Upload your Excel file containing company data using the file upload widget
-2. Select the criteria you want to use for evaluation
-3. Adjust the weights for each criterion using the sliders
-4. Click "Calculate Scores" to generate composite scores
-5. Use the percentile slider to filter companies based on their scores
+1. Run the Streamlit app:
 
-## Input Data Format
+   ```bash
+   streamlit run app.py
+   ```
 
-Your Excel file should contain:
+2. Open your web browser and navigate to the URL shown in the terminal (typically http://localhost:8501)
 
-- One row per company
-- Columns for different criteria/metrics
-- Numerical values for each criterion
+3. Upload an Excel file with the following columns:
+   - `short_name`: Company identifiers
+   - `score_1`, `score_2`, etc.: Scoring criteria columns
+   - `gics_1_sector`: Industry sector classification
+   - `country`: Company's country (optional)
+   - `Market cap group`: Market capitalization category (optional)
+
+## Data Format Example
+
+Your Excel file should look something like this:
+
+| short_name | score_1 | score_2 | score_3 | gics_1_sector | country | Market cap group |
+| ---------- | ------- | ------- | ------- | ------------- | ------- | ---------------- |
+| Company A  | 1       | 0       | 1       | IT            | USA     | Large Cap        |
+| Company B  | 0       | 1       | 0       | Energy        | UK      | Mid Cap          |
+| Company C  | 1       | 1       | 0       | IT            | USA     | Small Cap        |
 
 ## License
 
-This project is open source and available under the MIT License.
+MIT License
