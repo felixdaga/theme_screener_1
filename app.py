@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
+from chat_analysis import format_data_for_prompt, analyze_with_chatgpt
 
 @st.cache_data
 def load_returns_data():
@@ -9,15 +10,16 @@ def load_returns_data():
     try:
         returns = pd.read_excel('returns.xlsx', index_col='DATE')
         msci = pd.read_excel('msci_wrld.xlsx')
-        return returns, msci
+        rbics = pd.read_excel('rbics.xlsx')  # Add rbics data loading
+        return returns, msci, rbics
     except Exception as e:
-        st.error(f"Error loading returns data: {str(e)}")
-        return None, None
+        st.error(f"Error loading data: {str(e)}")
+        return None, None, None
 
-# Load returns data using cache
-RETURNS, MSCIWRLD = load_returns_data()
-if RETURNS is not None and MSCIWRLD is not None:
-    st.success("Returns data loaded successfully!")
+# Load data using cache
+RETURNS, MSCIWRLD, RBICS_DF = load_returns_data()
+if RETURNS is not None and MSCIWRLD is not None and RBICS_DF is not None:
+    st.success("Data loaded successfully!")
 
 # Set page config
 st.set_page_config(
@@ -390,8 +392,8 @@ if uploaded_file is not None:
         chunk_size = st.number_input(
             "Select chunk size for data processing",
             min_value=1,
-            max_value=100,
-            value=10,
+            max_value=400,
+            value=100,
             help="Number of companies to process in each chunk"
         )
         
@@ -410,14 +412,12 @@ if uploaded_file is not None:
             else:
                 with st.spinner("Analyzing portfolio with ChatGPT..."):
                     try:
-                        # Format data for prompt
-                        formatted_data = format_data_for_prompt(
+                        # Get analysis from ChatGPT
+                        analysis = analyze_with_chatgpt(
                             df_filtered[selected_columns],
+                            question,
                             chunk_size=chunk_size
                         )
-                        
-                        # Get analysis from ChatGPT
-                        analysis = analyze_with_chatgpt(formatted_data, question)
                         
                         # Display results
                         st.markdown("### Analysis Results")
@@ -425,6 +425,55 @@ if uploaded_file is not None:
                         
                     except Exception as e:
                         st.error(f"Error during analysis: {str(e)}")
+
+        # Company View Module
+        st.header("Company View")
+        
+        # Company selection dropdown
+        company_names = df['short_name'].tolist()
+        selected_company = st.selectbox(
+            "Select a company",
+            options=company_names,
+            help="Choose a company to view its detailed analysis"
+        )
+        
+        if selected_company:
+            # Get company ID
+            company_id = df[df['short_name'] == selected_company]['ID'].iloc[0]
+            
+            # Filter RBICS data
+            company_rbics = RBICS_DF[RBICS_DF.barrid == company_id].copy()
+            
+            if not company_rbics.empty:
+                # Create two columns for layout
+                col1, col2 = st.columns([1, 1])
+                
+                with col1:
+                    # Display company details
+                    st.subheader("Company Details")
+                    company_details = df[df['short_name'] == selected_company].iloc[0]
+                    for col in company_details.index:
+                        if col != 'ID':  # Skip ID as it's internal
+                            st.write(f"**{col}:** {company_details[col]}")
+                    
+                    # Display filtered table
+                    st.subheader("Data Table")
+                    st.dataframe(company_rbics)
+                
+                with col2:
+                    # Create line chart
+                    st.subheader("Trend Analysis")
+                    fig = px.line(
+                        company_rbics,
+                        title=f'Analysis for {selected_company}'
+                    )
+                    fig.update_layout(
+                        margin=dict(t=50, l=25, r=25, b=25),
+                        height=400
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning(f"No RBICS data found for {selected_company}")
 
 else:
     st.info("Please upload an Excel file to begin analysis")
@@ -435,6 +484,7 @@ else:
     st.markdown("""
     Your Excel file should contain the following columns:
     - `short_name`: Company identifiers
+    - `ID`: Company ID for matching with RBICS data
     - Any numeric columns you want to use for scoring
     - `gics_1_sector`: Industry sector classification
     - `country`: Company's country (optional)
