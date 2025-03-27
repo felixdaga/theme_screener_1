@@ -445,33 +445,28 @@ if uploaded_file is not None:
             company_rbics = RBICS_DF[RBICS_DF.barrid == company_id].copy()
             
             if not company_rbics.empty:
-                # Create two columns for layout
-                col1, col2 = st.columns([1, 1])
+                # Display company details
+                st.subheader("Company Details")
+                company_details = df[df['short_name'] == selected_company].iloc[0]
+                for col in company_details.index:
+                    if col != 'ID':  # Skip ID as it's internal
+                        st.write(f"**{col}:** {company_details[col]}")
                 
-                with col1:
-                    # Display company details
-                    st.subheader("Company Details")
-                    company_details = df[df['short_name'] == selected_company].iloc[0]
-                    for col in company_details.index:
-                        if col != 'ID':  # Skip ID as it's internal
-                            st.write(f"**{col}:** {company_details[col]}")
-                    
-                    # Display filtered table
-                    st.subheader("Data Table")
-                    st.dataframe(company_rbics)
+                # Create line chart
+                st.subheader("Trend Analysis")
+                fig = px.line(
+                    company_rbics,
+                    title=f'Analysis for {selected_company}'
+                )
+                fig.update_layout(
+                    margin=dict(t=50, l=25, r=25, b=25),
+                    height=400
+                )
+                st.plotly_chart(fig, use_container_width=True)
                 
-                with col2:
-                    # Create line chart
-                    st.subheader("Trend Analysis")
-                    fig = px.line(
-                        company_rbics,
-                        title=f'Analysis for {selected_company}'
-                    )
-                    fig.update_layout(
-                        margin=dict(t=50, l=25, r=25, b=25),
-                        height=400
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+                # Display filtered table
+                st.subheader("Data Table")
+                st.dataframe(company_rbics)
             else:
                 st.warning(f"No RBICS data found for {selected_company}")
 
