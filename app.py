@@ -10,15 +10,22 @@ def load_returns_data():
     try:
         returns = pd.read_excel('returns.xlsx', index_col='DATE')
         msci = pd.read_excel('msci_wrld.xlsx')
-        rbics = pd.read_excel('rbics.xlsx')  # Add rbics data loading
-        return returns, msci, rbics
+        rbics = pd.read_excel('rbics.xlsx')
+        # Add fundamentals data loading
+        fundamentals = {
+            'capex': pd.read_excel('fundamentals/capex.xlsx', index_col='DATE'),
+            'revenue': pd.read_excel('fundamentals/revenue.xlsx', index_col='DATE'),
+            'ebitda': pd.read_excel('fundamentals/ebitda.xlsx', index_col='DATE'),
+            # Add more fundamental items as needed
+        }
+        return returns, msci, rbics, fundamentals
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
-        return None, None, None
+        return None, None, None, None
 
 # Load data using cache
-RETURNS, MSCIWRLD, RBICS_DF = load_returns_data()
-if RETURNS is not None and MSCIWRLD is not None and RBICS_DF is not None:
+RETURNS, MSCIWRLD, RBICS_DF, FUNDAMENTALS = load_returns_data()
+if RETURNS is not None and MSCIWRLD is not None and RBICS_DF is not None and FUNDAMENTALS is not None:
     st.success("Data loaded successfully!")
 
 # Set page config
@@ -375,6 +382,86 @@ if uploaded_file is not None:
                     f"{msci_total_return:.2f}%",
                     f"From {start_date.strftime('%Y-%m-%d')} to {msci_cum_returns.index[-1].strftime('%Y-%m-%d')}"
                 )
+
+        # Portfolio Fundamentals Analysis
+        st.header("Portfolio Fundamentals Analysis")
+        if FUNDAMENTALS is None:
+            st.error("Please ensure fundamentals data is loaded correctly.")
+        else:
+            # Create two columns for controls
+            fund_col1, fund_col2 = st.columns(2)
+            
+            with fund_col1:
+                # Fundamental item selection
+                selected_item = st.selectbox(
+                    "Select Fundamental Metric",
+                    options=list(FUNDAMENTALS.keys()),
+                    help="Choose the fundamental metric to analyze"
+                )
+            
+            with fund_col2:
+                # Start date selection
+                start_date = st.date_input(
+                    "Select start date",
+                    value=pd.to_datetime('2018-01-01').date(),
+                    min_value=pd.to_datetime('2010-01-01').date(),
+                    max_value=pd.to_datetime('2024-01-01').date()
+                )
+            
+            if selected_item and start_date:
+                # Get the selected fundamental data
+                fund_data = FUNDAMENTALS[selected_item]
+                
+                # Convert start_date to datetime
+                start_date_dt = pd.to_datetime(start_date)
+                
+                # Filter data from start date to latest
+                fund_data = fund_data.loc[start_date_dt:]
+                
+                # Filter columns for portfolio and MSCI World
+                portfolio_data = fund_data[df_filtered['ID'].tolist()]
+                msci_data = fund_data[MSCIWRLD['ID'].tolist()]
+                
+                # Calculate aggregated values (using mean)
+                portfolio_agg = portfolio_data.mean(axis=1)
+                msci_agg = msci_data.mean(axis=1)
+                
+                # Create the plot
+                fig = px.line(
+                    pd.DataFrame({
+                        'Portfolio': portfolio_agg,
+                        'MSCI World': msci_agg
+                    }),
+                    title=f'{selected_item.capitalize()} Comparison',
+                    labels={'value': selected_item.capitalize(), 'index': 'Date'}
+                )
+                
+                # Update layout
+                fig.update_layout(
+                    showlegend=True,
+                    legend_title_text='',
+                    hovermode='x unified'
+                )
+                
+                # Display the plot
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Calculate and display summary statistics
+                col1, col2 = st.columns(2)
+                with col1:
+                    portfolio_value = portfolio_agg.mean()
+                    st.metric(
+                        "Portfolio Mean",
+                        f"{portfolio_value:.2f}",
+                        f"From {start_date.strftime('%Y-%m-%d')} to {fund_data.index[-1].strftime('%Y-%m-%d')}"
+                    )
+                with col2:
+                    msci_value = msci_agg.mean()
+                    st.metric(
+                        "MSCI World Mean",
+                        f"{msci_value:.2f}",
+                        f"From {start_date.strftime('%Y-%m-%d')} to {fund_data.index[-1].strftime('%Y-%m-%d')}"
+                    )
 
         # ChatGPT Portfolio Analysis
         st.header("Ask ChatGPT about the Portfolio")
